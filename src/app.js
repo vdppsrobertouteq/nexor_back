@@ -23,7 +23,7 @@ const corsOptions = {
 // Middlewares globales
 app.use(helmet()); // Seguridad
 app.use(compression()); // Compresión
-app.use(cors()); // CORS
+app.use(cors(corsOptions)); // CORS con opciones
 app.use(morgan('combined')); // Logging
 app.use(express.json({ limit: '50mb' })); // Parsing JSON
 app.use(express.urlencoded({ extended: true, limit: '50mb' })); // Parsing URL-encoded

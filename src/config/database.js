@@ -2,20 +2,30 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// Configuración de la conexión a MySQL
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'sgp_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-};
+// Soporte para Railway (MYSQL_URL) o variables individuales
+const dbConfig = process.env.MYSQL_URL
+  ? {
+      uri: process.env.MYSQL_URL,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    }
+  : {
+      host: process.env.DB_HOST || process.env.MYSQLHOST || 'localhost',
+      port: Number(process.env.DB_PORT || process.env.MYSQLPORT || 3306),
+      user: process.env.DB_USER || process.env.MYSQLUSER || 'root',
+      password: process.env.DB_PASSWORD || process.env.MYSQLPASSWORD || '',
+      database: process.env.DB_NAME || process.env.MYSQLDATABASE || 'sgp_db',
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    };
 
 // Crear el pool de conexiones
-const pool = mysql.createPool(dbConfig);
+// mysql2 acepta tanto { uri } como las propiedades individuales
+const pool = process.env.MYSQL_URL
+  ? mysql.createPool(process.env.MYSQL_URL)
+  : mysql.createPool(dbConfig);
 
 // Función para conectar a la base de datos
 const connectDB = async () => {
@@ -52,10 +62,11 @@ const createDatabase = async () => {
     delete tempConfig.database;
     
     const tempConnection = await mysql.createConnection(tempConfig);
-    await tempConnection.execute(`CREATE DATABASE IF NOT EXISTS sgp_db`);
+    const dbName = process.env.DB_NAME || process.env.MYSQLDATABASE || 'sgp_db';
+    await tempConnection.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
     await tempConnection.end();
     
-    console.log(`✅ Base de datos '${process.env.DB_NAME}' creada exitosamente`);
+    console.log(`✅ Base de datos '${dbName}' creada exitosamente`);
     
     // Reconectar con la base de datos creada
     return await connectDB();
