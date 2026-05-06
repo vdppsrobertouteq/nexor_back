@@ -62,19 +62,18 @@ const config = {
 
 // Validar variables de entorno críticas
 const validateConfig = () => {
-  const required = [
-    'DB_HOST',
-    'DB_USER',
-    'DB_PASSWORD',
-    'DB_NAME',
-    'JWT_SECRET'
-  ];
-  
-  const missing = required.filter(key => !process.env[key]);
-  
-  if (missing.length > 0) {
-    console.error('❌ Variables de entorno faltantes:', missing.join(', '));
-    console.error('💡 Asegúrate de configurar estas variables en tu archivo .env');
+  // En Railway la DB se provee via MYSQL_URL o variables MYSQL*
+  const hasRailwayDB = process.env.MYSQL_URL || process.env.MYSQLHOST;
+  const hasCustomDB = process.env.DB_HOST && process.env.DB_USER;
+
+  if (!hasRailwayDB && !hasCustomDB) {
+    console.error('❌ Variables de entorno faltantes: necesitas MYSQL_URL (Railway) o DB_HOST + DB_USER');
+    console.error('💡 Asegúrate de configurar estas variables en Railway o en tu archivo .env');
+    process.exit(1);
+  }
+
+  if (!process.env.JWT_SECRET) {
+    console.error('❌ Variable de entorno faltante: JWT_SECRET');
     process.exit(1);
   }
 };
