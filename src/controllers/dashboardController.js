@@ -158,9 +158,11 @@ const getKPIsByPeriod = async (req, res, next) => {
 const getDocumentsSignedStats = async (req, res, next) => {
   try {
     const userId = req.user.id;
+    const userRole = req.user.rol || req.user.nombre_rol;
     const { projectId } = req.query;
     const stats = await dashboardModel.getDocumentsSignedStats(
       userId,
+      userRole,
       projectId ? parseInt(projectId) : null
     );
 

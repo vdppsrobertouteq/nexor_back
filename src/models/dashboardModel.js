@@ -270,9 +270,20 @@ const getKPIsByPeriod = async (userId, days) => {
 };
 
 // Estadísticas de documentos firmados vs no firmados
-const getDocumentsSignedStats = async (userId, projectId = null) => {
-  let projectFilter = 'WHERE p.id_administrador = ?';
-  const params = [userId];
+const getDocumentsSignedStats = async (userId, userRole, projectId = null) => {
+  const isSuperAdmin = userRole === 'Superadministrador';
+  const params = [];
+
+  // Base: proyectos donde el usuario es admin o miembro
+  let projectFilter;
+  if (isSuperAdmin) {
+    projectFilter = 'WHERE 1=1';
+  } else {
+    projectFilter = `WHERE (p.id_administrador = ? OR p.id IN (
+      SELECT id_proyecto FROM Proyecto_Usuarios WHERE id_usuario = ?
+    ))`;
+    params.push(userId, userId);
+  }
 
   if (projectId) {
     projectFilter += ' AND p.id = ?';
@@ -281,7 +292,7 @@ const getDocumentsSignedStats = async (userId, projectId = null) => {
 
   const query = `
     SELECT
-      SUM(CASE WHEN dv.estatus = 'Firmado' THEN 1 ELSE 0 END) as firmados,
+      SUM(CASE WHEN dv.estatus = 'Firmado'   THEN 1 ELSE 0 END) as firmados,
       SUM(CASE WHEN dv.estatus = 'Pendiente' THEN 1 ELSE 0 END) as pendientes,
       SUM(CASE WHEN dv.estatus = 'Rechazado' THEN 1 ELSE 0 END) as rechazados,
       COUNT(*) as total
@@ -295,7 +306,13 @@ const getDocumentsSignedStats = async (userId, projectId = null) => {
       )
   `;
   const result = await executeQuery(query, params);
-  return result[0] || { firmados: 0, pendientes: 0, rechazados: 0, total: 0 };
+  const row = result[0] || {};
+  return {
+    firmados:   Number(row.firmados   || 0),
+    pendientes: Number(row.pendientes || 0),
+    rechazados: Number(row.rechazados || 0),
+    total:      Number(row.total      || 0)
+  };
 };
 
 module.exports = {
