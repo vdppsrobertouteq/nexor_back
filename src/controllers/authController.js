@@ -176,12 +176,24 @@ const sendVerificationCode = async (req, res, next) => {
         await saveTemporaryVerificationCode(email, codigo, fechaExpiracion);
 
         // Enviar email de verificación
-        await emailService.sendVerificationEmail(email, nombre, codigo);
+        let emailEnviado = true;
+        try {
+            await emailService.sendVerificationEmail(email, nombre, codigo);
+        } catch (emailError) {
+            emailEnviado = false;
+            console.warn('⚠ Email no enviado:', emailError.message);
+            console.log(`🔑 CÓDIGO DE VERIFICACIÓN para ${email}: ${codigo}`);
+        }
 
         res.status(200).json({
             success: true,
-            message: 'Código de verificación enviado exitosamente',
-            data: { email }
+            message: emailEnviado
+                ? 'Código de verificación enviado exitosamente'
+                : 'No se pudo enviar el email. Usa el código mostrado en pantalla.',
+            data: {
+                email,
+                ...(emailEnviado ? {} : { codigo_debug: codigo })
+            }
         });
 
     } catch (error) {

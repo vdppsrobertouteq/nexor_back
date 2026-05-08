@@ -2,25 +2,25 @@
 const axios = require('axios');
 const config = require('../config/config');
 
-// Resend API (HTTP) — no usa SMTP, funciona en Railway
-const RESEND_API_URL = 'https://api.resend.com/emails';
-const FROM_ADDRESS = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+// Brevo (ex-Sendinblue) API — no requiere verificar dominio
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const FROM_ADDRESS = process.env.EMAIL_FROM || 'noreply@example.com';
 
 async function sendEmail({ to, subject, html }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error('RESEND_API_KEY no está configurado');
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) throw new Error('BREVO_API_KEY no está configurado');
 
   await axios.post(
-    RESEND_API_URL,
+    BREVO_API_URL,
     {
-      from: `"${config.app.name}" <${FROM_ADDRESS}>`,
-      to: [to],
+      sender: { name: config.app.name, email: FROM_ADDRESS },
+      to: [{ email: to }],
       subject,
-      html,
+      htmlContent: html,
     },
     {
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        'api-key': apiKey,
         'Content-Type': 'application/json',
       },
       timeout: 10000,
