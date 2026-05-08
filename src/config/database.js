@@ -79,7 +79,7 @@ const createDatabase = async () => {
 // Función para ejecutar consultas
 const executeQuery = async (query, params = []) => {
   try {
-    const [results] = await pool.execute(query, params);
+    const [results] = await pool.query(query, params);
     return results;
   } catch (error) {
     console.error('❌ Error en la consulta:', error.message);
@@ -96,7 +96,7 @@ const executeTransaction = async (queries) => {
     
     const results = [];
     for (const { query, params } of queries) {
-      const [result] = await connection.execute(query, params);
+      const [result] = await connection.query(query, params);
       results.push(result);
     }
     
