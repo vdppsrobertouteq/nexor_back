@@ -261,11 +261,17 @@ const signDocument = async (req, res, next) => {
     const signatureY = parseInt(y) || 100;
     console.log('🖊 Coordenadas de firma:', { signatureX, signatureY });
 
+    const parsedXRatio = parseFloat(xRatio);
+    const parsedYRatio = parseFloat(yRatio);
+    const safeXRatio = isNaN(parsedXRatio) ? 0.15 : parsedXRatio;
+    const safeYRatio = isNaN(parsedYRatio) ? 0.85 : parsedYRatio;
+    console.log('📐 Ratios de firma:', { safeXRatio, safeYRatio });
+
     const signedPDF = await signatureService.applySignatureToPDF(
       pdfAbsolutePath,
       req.file.buffer,
-      parseFloat(xRatio),
-      parseFloat(yRatio)
+      safeXRatio,
+      safeYRatio
     );
 
     console.log('✅ Firma aplicada al PDF');
