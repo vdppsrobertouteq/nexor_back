@@ -246,8 +246,14 @@ const signDocument = async (req, res, next) => {
     const docInfo = await documentModel.getDocumentAndProjectInfo(versionInfo.id_documento);
     console.log('📁 Información del documento y proyecto:', docInfo);
 
-    const projectFolder = `${docInfo.id_proyecto}_${docInfo.nombre_proyecto}`.replace(/[^a-zA-Z0-9_\-\.]/g, '_');
-    const pdfAbsolutePath = path.join(__dirname, '..', 'uploads', 'documents', projectFolder, path.basename(versionInfo.ruta_archivo));
+    // Derivar ruta absoluta directamente desde la URL almacenada en DB
+    // ruta_archivo = '/api/v1/documents/files/<folder>/<filename.pdf>'
+    const FILE_URL_PREFIX = '/api/v1/documents/files/';
+    const UPLOADS_ROOT = path.join(__dirname, '..', 'uploads', 'documents');
+    const relPath = versionInfo.ruta_archivo.startsWith(FILE_URL_PREFIX)
+      ? versionInfo.ruta_archivo.slice(FILE_URL_PREFIX.length)
+      : path.basename(versionInfo.ruta_archivo);
+    const pdfAbsolutePath = path.join(UPLOADS_ROOT, relPath);
 
     console.log('📂 Ruta absoluta del PDF original:', pdfAbsolutePath);
 

@@ -46,8 +46,9 @@ const applySignatureToPDF = async (pdfPath, signatureBuffer, xRatio = 0.15, yRat
     return Buffer.from(newPdfBytes);
 
   } catch (error) {
-    console.error('Error al aplicar firma:', error);
-    throw new Error('Error al procesar la firma en el PDF');
+    console.error('Error al aplicar firma:', error.message || error);
+    // Propagar mensaje original para mejor diagnóstico
+    throw new Error(`Error al procesar la firma en el PDF: ${error.message || error}`);
   }
 };
 
