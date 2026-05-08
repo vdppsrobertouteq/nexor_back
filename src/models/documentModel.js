@@ -4,7 +4,7 @@ const { executeQuery } = require('../config/database');
 // Obtener usuarios del proyecto para firmantes
 const getProjectUsers = async (projectId) => {
   const query = `
-    SELECT DISTINCT 
+    SELECT DISTINCT
       u.id,
       CONCAT(u.nombre, ' ', u.apellido) as nombre_completo,
       u.email,
@@ -12,10 +12,23 @@ const getProjectUsers = async (projectId) => {
     FROM Usuarios u
     JOIN Proyecto_Usuarios pu ON u.id = pu.id_usuario
     JOIN Roles r ON u.id_rol = r.id
-    WHERE pu.id_proyecto = ? AND r.nombre_rol IN ('Administrador', 'Cliente', 'Colaborador')
-    ORDER BY u.nombre, u.apellido
+    WHERE pu.id_proyecto = ?
+
+    UNION
+
+    SELECT DISTINCT
+      u.id,
+      CONCAT(u.nombre, ' ', u.apellido) as nombre_completo,
+      u.email,
+      r.nombre_rol
+    FROM Usuarios u
+    JOIN Proyectos p ON u.id = p.id_administrador
+    JOIN Roles r ON u.id_rol = r.id
+    WHERE p.id = ?
+
+    ORDER BY nombre_completo
   `;
-  return await executeQuery(query, [projectId]);
+  return await executeQuery(query, [projectId, projectId]);
 };
 
 // Crear documento
